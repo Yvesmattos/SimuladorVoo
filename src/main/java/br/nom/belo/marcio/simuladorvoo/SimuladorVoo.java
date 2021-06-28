@@ -12,6 +12,7 @@ class Aviao implements Runnable {
 		this.tempoVoo = tempoVoo;
 	}
 
+	// alterado pelo grupo
 	public void run() {
 		try {
 			Thread.sleep(tempoVoo / 2);
@@ -20,13 +21,20 @@ class Aviao implements Runnable {
 		}
 
 		try {
-			decolar();
+			synchronized (aeroporto) {
+				aeroporto.wait();
+				decolar();
+			}
+
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		voar();
 		try {
-			aterrisar();
+			synchronized (aeroporto) {
+				aeroporto.wait();
+				aterrisar();
+			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -35,11 +43,6 @@ class Aviao implements Runnable {
 
 	private void decolar() throws InterruptedException {
 
-		// alterado pelo grupo
-		synchronized (aeroporto) {
-			aeroporto.wait();
-		}
-		System.out.println(idAviao + ": esperando pista...");
 		String acao = idAviao + ": decolando...";
 		aeroporto.esperarPistaDisponivel(acao); // Espera uma pista livre
 
@@ -57,11 +60,6 @@ class Aviao implements Runnable {
 
 	private void aterrisar() throws InterruptedException {
 
-		// alterado pelo grupo
-		synchronized (aeroporto) {
-			aeroporto.wait();
-		}
-		System.out.println(idAviao + ": esperando pista...");
 		String acao = idAviao + ": aterissando...";
 		aeroporto.esperarPistaDisponivel(acao); // Espera uma pista livre
 		System.out.println();
@@ -87,19 +85,23 @@ class Aeroporto implements Runnable {
 		System.out.println(acao);
 	}
 
-	public synchronized void mudarEstadoPistaDisponivel() {
+	
+	// alterado pelo grupo
+	public synchronized void mudarEstadoPistaDisponivel() throws InterruptedException {
 		// Inverte o estado da pista.
 		temPistaDisponivel = !temPistaDisponivel;
 		System.out.println(nomeAeroporto + " tem pista disponível: " + (temPistaDisponivel == true ? "Sim" : "Não"));
 		// Notifica a mudanca de estado para quem estiver esperando.
-		if (temPistaDisponivel) {
+		if (!temPistaDisponivel) {
+			System.out.println("Esperando liberação da pista...");
+		} else {
 			this.notify();
 		}
-
 	}
 
 	public void run() {
 		System.out.println("Rodando aeroporto " + nomeAeroporto);
+		System.out.println();
 
 		// alterado pelo grupo
 		while (voando) {
@@ -135,7 +137,7 @@ public final class SimuladorVoo {
 		Thread thread14bis = new Thread(aviao14bis);
 
 		// alterado pelo grupo
-		Aviao dassault = new Aviao(santosDumont, "Avião Dassault Mirage III", 8500);
+		Aviao dassault = new Aviao(santosDumont, "Avião Dassault Mirage III", 500);
 		Thread threadDassault = new Thread(dassault);
 
 		Aviao embraerKc = new Aviao(santosDumont, "Avião Embraer KC-390", 12000);
@@ -148,8 +150,8 @@ public final class SimuladorVoo {
 		Thread threadWright = new Thread(wright);
 
 		threadAeroporto.start();
-		thread14bis.start();
 		threadDassault.start();
+		thread14bis.start();
 		threadEmbraerKc.start();
 		threadDemoiselle.start();
 		threadWright.start();
