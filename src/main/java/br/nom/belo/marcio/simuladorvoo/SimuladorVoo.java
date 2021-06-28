@@ -38,11 +38,10 @@ class Aviao implements Runnable {
 		// alterado pelo grupo
 		synchronized (aeroporto) {
 			aeroporto.wait();
-
-			System.out.println(idAviao + ": esperando pista...");
-			String acao = idAviao + ": decolando...";
-			aeroporto.esperarPistaDisponivel(acao); // Espera uma pista livre
 		}
+		System.out.println(idAviao + ": esperando pista...");
+		String acao = idAviao + ": decolando...";
+		aeroporto.esperarPistaDisponivel(acao); // Espera uma pista livre
 
 	}
 
